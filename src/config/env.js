@@ -1,16 +1,3 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const requiredKeys = ['BOT_TOKEN', 'JWT_SECRET'];
-const missing = requiredKeys.filter((key) => !process.env[key]);
-
-if (missing.length) {
-  throw new Error(
-    `Missing required environment variables: ${missing.join(', ')}`
-  );
-}
-
 export const env = Object.freeze({
   PORT: 4000,
   CLIENT_ORIGIN: 'https://rm-ma-front-rocketmind.amvera.io',
