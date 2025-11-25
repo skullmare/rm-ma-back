@@ -13,38 +13,6 @@ export class TelegramAuthError extends Error {
   }
 }
 
-const ttlMs = env.TELEGRAM_AUTH_TTL * 1000;
-
-// ----------------------------
-// Helpers
-// ----------------------------
-
-// Формируем DataCheckString по правилам Telegram
-const buildDataCheckString = (params) =>
-  params
-    .map(([key, value]) => `${key}=${value}`)
-    .sort()
-    .join('\n');
-
-// Вычисляем hash по документации Telegram
-const computeHash = (dataCheckString, botToken) => {
-  const secretKey = crypto
-    .createHash('sha256')
-    .update(botToken)
-    .digest();
-
-  return crypto
-    .createHmac('sha256', secretKey)
-    .update(dataCheckString)
-    .digest('hex');
-};
-
-const toObject = (entries) =>
-  entries.reduce((acc, [key, value]) => {
-    acc[key] = value;
-    return acc;
-  }, {});
-
 const buildDebugPayload = (base, extra = {}) =>
   env.ENABLE_DEBUG_ERRORS ? { ...base, ...extra } : null;
 
@@ -73,7 +41,7 @@ export const verifyTelegramAuth = (initData, botToken = env.BOT_TOKEN) => {
   
     // Теперь собираем правильную строку
     const dataCheckString = Array.from(params.entries())
-    .sort(([a], [b]) => a.localeCompare(b))   // ← ТЫ СОРТИРУЕШЬ НЕПРАВИЛЬНО!
+    .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
   
