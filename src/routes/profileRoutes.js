@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authGuard } from '../middleware/authGuard.js';
-import { getProfile } from '../services/n8nClient.js';
+import { getProfile, updateProfession } from '../services/n8nClient.js';
 
 const router = Router();
 
@@ -35,6 +35,33 @@ router.get('/', authGuard, async (req, res, next) => {
     return res.json({ profile: n8nProfile });
   } catch (error) {
     console.error('Error in profile route:', error);
+    console.error('Error stack:', error.stack);
+    return next(error);
+  }
+});
+
+router.put('/profession', authGuard, async (req, res, next) => {
+  try {
+    const { chat_id, profession } = req.body;
+
+    if (!chat_id) {
+      return res.status(400).json({ message: 'chat_id is required' });
+    }
+
+    console.log('Profile route: updating profession for chat_id:', chat_id);
+    const result = await updateProfession(chat_id, profession);
+    console.log('Profile route: n8n response:', JSON.stringify(result, null, 2));
+
+    // Если n8n вернул ошибку или пропустил запрос
+    if (result && (result.status === 'error' || result.status === 'skipped')) {
+      return res.status(500).json({ 
+        message: result.error || result.reason || 'Failed to update profession' 
+      });
+    }
+
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error in profession update route:', error);
     console.error('Error stack:', error.stack);
     return next(error);
   }

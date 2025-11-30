@@ -76,4 +76,33 @@ export const getProfile = async (chatId) => {
   }
 };
 
+export const updateProfession = async (chatId, profession) => {
+  if (!client) {
+    return { status: 'skipped', reason: 'n8n client not configured' };
+  }
+
+  if (!chatId) {
+    return { status: 'error', error: 'chatId is required' };
+  }
+
+  const payload = [
+    {
+      chat_id: String(chatId),
+      profession: profession || '',
+    },
+  ];
+
+  try {
+    const { data } = await client.post('/profile/profession/update', payload);
+    return data;
+  } catch (error) {
+    console.error('Failed to update profession in n8n:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    return { status: 'error', error: error.message };
+  }
+};
+
 
