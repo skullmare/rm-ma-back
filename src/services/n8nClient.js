@@ -11,64 +11,6 @@ const client = n8nEnabled
     })
   : null;
 
-const fallbackProfile = (user) => ({
-  userId: user.id,
-  tariff: 'free',
-  tokensRemaining: 0,
-  lastPaymentAt: null,
-});
-
-const fallbackHistory = (agent) => ({
-  agent,
-  items: [],
-});
-
-export const fetchProfile = async (user) => {
-  if (!client) {
-    return fallbackProfile(user);
-  }
-
-  const { data } = await client.get('/profile', {
-    params: { userId: user.id, telegramId: user.telegramId },
-  });
-  return data;
-};
-
-export const fetchChatHistory = async (user, params = {}) => {
-  if (!client) {
-    return fallbackHistory(params.agent);
-  }
-
-  const { data } = await client.get('/chats/history', {
-    params: {
-      userId: user.id,
-      telegramId: user.telegramId,
-      limit: params.limit ?? 20,
-      agent: params.agent,
-    },
-  });
-  return data;
-};
-
-export const sendChatMessage = async (user, payload) => {
-  if (!client) {
-    return {
-      status: 'queued',
-      agent: payload.agent,
-      echo: payload.message,
-    };
-  }
-
-  const { data } = await client.post('/chats/send', {
-    userId: user.id,
-    telegramId: user.telegramId,
-    message: payload.message,
-    agent: payload.agent,
-    meta: payload.meta ?? {},
-  });
-  return data;
-};
-
 export const initProfile = async (user) => {
   if (!client) {
     return { status: 'skipped', reason: 'n8n client not configured' };
@@ -89,7 +31,7 @@ export const initProfile = async (user) => {
   ];
 
   try {
-    const { data } = await client.post('/webhook/profile/init', payload);
+    const { data } = await client.post('/profile/init', payload);
     return data;
   } catch (error) {
     // Логируем ошибку, но не прерываем процесс авторизации
