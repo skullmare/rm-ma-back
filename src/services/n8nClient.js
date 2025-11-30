@@ -11,6 +11,15 @@ const client = n8nEnabled
     })
   : null;
 
+// Отдельный клиент для отправки сообщений с увеличенным таймаутом (ответ от AI может занимать больше времени)
+const clientLongTimeout = n8nEnabled
+  ? axios.create({
+      baseURL: env.N8N_BASE_URL,
+      timeout: 60000, // 60 секунд для отправки сообщений
+      headers: { Authorization: `Bearer ${env.N8N_API_KEY}` },
+    })
+  : null;
+
 export const initProfile = async (user) => {
   if (!client) {
     return { status: 'skipped', reason: 'n8n client not configured' };
@@ -132,7 +141,7 @@ export const sendAgentMessage = async (chatId, message, agent) => {
   };
 
   try {
-    const { data } = await client.post('/agent/send/message', payload);
+    const { data } = await clientLongTimeout.post('/agent/send/message', payload);
     return data;
   } catch (error) {
     console.error('Failed to send message to agent in n8n:', error.message);
