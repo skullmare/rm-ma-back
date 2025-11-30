@@ -41,4 +41,20 @@ export const initProfile = async (user) => {
   }
 };
 
+export const getProfile = async (chatId) => {
+  if (!client) {
+    return { status: 'skipped', reason: 'n8n client not configured' };
+  }
+
+  try {
+    const { data } = await client.get('/profile/get', {
+      params: { chat_id: String(chatId) },
+    });
+    return data;
+  } catch (error) {
+    console.error('Failed to get profile from n8n:', error.message);
+    return { status: 'error', error: error.message };
+  }
+};
+
 

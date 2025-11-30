@@ -26,7 +26,14 @@ router.post('/login', async (req, res, next) => {
       telegramId: user.telegramId,
     });
 
-    return res.json({ token, user });
+    // Отправляем только token и chat_id, данные профиля будут приходить из n8n через /api/profile
+    return res.json({ 
+      token, 
+      user: {
+        id: user.id,
+        chat_id: String(user.telegramId || user.id),
+      }
+    });
   } catch (error) {
     return next(error);
   }
