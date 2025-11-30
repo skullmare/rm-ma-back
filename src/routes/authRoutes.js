@@ -16,7 +16,6 @@ router.post('/login', async (req, res, next) => {
 
     const { telegramUser } = verifyTelegramAuth(initData);
     const user = syncTelegramUser(telegramUser);
-    console.log('user', user);
     // Инициализируем профиль в n8n (не блокируем авторизацию при ошибке)
     initProfile(user).catch((error) => {
       console.error('Profile initialization error:', error);

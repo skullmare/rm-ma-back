@@ -27,6 +27,7 @@ export const initProfile = async (user) => {
       first_name: user.firstName || '',
       last_name: user.lastName || '',
       username: username || '',
+      photo_url: user.photoUrl || '',
     },
   ];
 
