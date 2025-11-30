@@ -46,13 +46,32 @@ export const getProfile = async (chatId) => {
     return { status: 'skipped', reason: 'n8n client not configured' };
   }
 
+  if (!chatId) {
+    return { status: 'error', error: 'chatId is required' };
+  }
+
   try {
     const { data } = await client.get('/profile/get', {
       params: { chat_id: String(chatId) },
     });
+    
+    // Если n8n вернул успешный ответ, возвращаем данные
+    // n8n может вернуть объект профиля напрямую или массив с одним элементом
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0];
+    }
+    if (data && typeof data === 'object') {
+      return data;
+    }
+    
+    // Если формат неожиданный, возвращаем как есть
     return data;
   } catch (error) {
     console.error('Failed to get profile from n8n:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
     return { status: 'error', error: error.message };
   }
 };
