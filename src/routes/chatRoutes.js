@@ -21,7 +21,7 @@ router.get('/history', authGuard, async (req, res, next) => {
     // Возвращаем сообщения в формате, который ожидает фронтенд
     return res.json({
       messages: messages,
-      hasMore: messages.length === 10, // Если получили 10 сообщений, возможно есть еще
+      hasMore: messages.length > 0, // Если получили 10 сообщений, возможно есть еще
     });
   } catch (error) {
     return next(error);
