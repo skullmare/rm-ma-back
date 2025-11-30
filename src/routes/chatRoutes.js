@@ -1,41 +1,60 @@
 import { Router } from 'express';
 import { authGuard } from '../middleware/authGuard.js';
+import { sendAgentMessage, getAgentMessages } from '../services/n8nClient.js';
 
 const router = Router();
 
+// Получение истории сообщений
 router.get('/history', authGuard, async (req, res, next) => {
   try {
-    const agent = req.query.agent;
-    if (!agent) {
-      return res.status(400).json({ message: 'agent is required' });
+    const chatId = req.user.telegramId || req.user.id;
+    
+    if (!chatId) {
+      return res.status(400).json({ message: 'User chat_id not found' });
     }
 
-    // Заглушка: возвращаем пустую историю
+    // Получаем timestamp из query параметра (опционально)
+    const timestamp = req.query.timestamp || null;
+
+    const messages = await getAgentMessages(chatId, timestamp);
+
+    // Возвращаем сообщения в формате, который ожидает фронтенд
     return res.json({
-      agent,
-      items: [],
+      messages: messages,
+      hasMore: messages.length === 10, // Если получили 10 сообщений, возможно есть еще
     });
   } catch (error) {
     return next(error);
   }
 });
 
+// Отправка сообщения агенту
 router.post('/send', authGuard, async (req, res, next) => {
   try {
-    const { message, meta, agent } = req.body ?? {};
+    const { message, agent } = req.body ?? {};
+    const chatId = req.user.telegramId || req.user.id;
 
     if (!message || !agent) {
       return res
         .status(400)
-        .json({ message: 'message and agent is required' });
+        .json({ message: 'message and agent are required' });
     }
 
-    // Заглушка: возвращаем эхо-ответ
-    return res.json({
-      status: 'queued',
-      agent,
-      echo: message,
-    });
+    if (!chatId) {
+      return res.status(400).json({ message: 'User chat_id not found' });
+    }
+
+    const response = await sendAgentMessage(chatId, message, agent);
+
+    // Проверяем, есть ли ошибка
+    if (response.status === 'error') {
+      return res.status(500).json({
+        message: response.error || 'Failed to send message',
+      });
+    }
+
+    // Возвращаем ответ агента
+    return res.json(response);
   } catch (error) {
     return next(error);
   }

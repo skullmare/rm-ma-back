@@ -105,4 +105,79 @@ export const updateProfession = async (chatId, profession) => {
   }
 };
 
+export const sendAgentMessage = async (chatId, message, agent) => {
+  if (!client) {
+    return { status: 'skipped', reason: 'n8n client not configured' };
+  }
+
+  if (!chatId || !message || !agent) {
+    return { status: 'error', error: 'chatId, message, and agent are required' };
+  }
+
+  // Маппинг имен агентов: sergey -> sergy
+  const agentMapping = {
+    'sergey': 'sergy',
+    'sergy': 'sergy',
+    'lida': 'lida',
+    'nick': 'nick',
+    'mark': 'mark',
+  };
+  
+  const mappedAgent = agentMapping[agent.toLowerCase()] || agent.toLowerCase();
+
+  const payload = {
+    chat_id: String(chatId),
+    message: message,
+    agent: mappedAgent,
+  };
+
+  try {
+    const { data } = await client.post('/agent/send/message', payload);
+    return data;
+  } catch (error) {
+    console.error('Failed to send message to agent in n8n:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    return { status: 'error', error: error.message };
+  }
+};
+
+export const getAgentMessages = async (chatId, timestamp = null) => {
+  if (!client) {
+    return { status: 'skipped', reason: 'n8n client not configured' };
+  }
+
+  if (!chatId) {
+    return { status: 'error', error: 'chatId is required' };
+  }
+
+  const payload = {
+    chat_id: String(chatId),
+  };
+
+  if (timestamp) {
+    payload.timestamp = String(timestamp);
+  }
+
+  try {
+    const { data } = await client.post('/agent/messages/get', payload);
+    // n8n может вернуть массив напрямую или объект с полем items
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data?.items && Array.isArray(data.items)) {
+      return data.items;
+    }
+    return [];
+  } catch (error) {
+    console.error('Failed to get messages from n8n:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    return [];
+  }
+};
 
