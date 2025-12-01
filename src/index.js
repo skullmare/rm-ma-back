@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import { TelegramAuthError } from './services/telegramAuth.js';
+import paymentRouter from './routes/paymentRouter.js';
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.get('/health', (_req, res) =>
 app.use('/api/auth/telegram', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/payments', paymentRouter);
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
