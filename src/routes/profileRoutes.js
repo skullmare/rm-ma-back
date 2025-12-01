@@ -13,13 +13,10 @@ router.get('/', authGuard, async (req, res, next) => {
       return res.status(400).json({ message: 'User chat_id not found' });
     }
 
-    console.log('Profile route: fetching profile for chat_id:', chatId);
     const n8nProfile = await getProfile(chatId);
-    console.log('Profile route: n8n response:', JSON.stringify(n8nProfile, null, 2));
 
     // Если n8n вернул ошибку или пропустил запрос, возвращаем базовый профиль
     if (n8nProfile && (n8nProfile.status === 'error' || n8nProfile.status === 'skipped')) {
-      console.log('Profile route: using fallback profile');
       const fallbackProfile = {
         userId: req.user.id,
         chat_id: String(chatId),
@@ -48,9 +45,7 @@ router.put('/profession', authGuard, async (req, res, next) => {
       return res.status(400).json({ message: 'chat_id is required' });
     }
 
-    console.log('Profile route: updating profession for chat_id:', chat_id);
     const result = await updateProfession(chat_id, profession);
-    console.log('Profile route: n8n response:', JSON.stringify(result, null, 2));
 
     // Если n8n вернул ошибку или пропустил запрос
     if (result && (result.status === 'error' || result.status === 'skipped')) {
