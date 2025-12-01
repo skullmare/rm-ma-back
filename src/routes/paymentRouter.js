@@ -15,6 +15,7 @@ const yookassa = new YooKassa({
 // -----------------------------------------------------------
 router.post("/create-payment", async (req, res) => {
     try {
+        const { chat_id } = req.body; // <--- получаем от клиента chat_id
         const payment = await yookassa.createPayment({
             amount: {
                 value: "1000",
@@ -26,6 +27,10 @@ router.post("/create-payment", async (req, res) => {
             },
             capture: true,
             description: "Оплата подписки на мини-приложение от Rocketmind",
+            save_payment_method: true,
+            metadata: {
+                chat_id: chat_id,   // <--- вот это самое важное!
+            },
         });
 
         return res.json(payment);
