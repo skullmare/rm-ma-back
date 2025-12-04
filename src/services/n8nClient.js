@@ -6,7 +6,7 @@ const n8nEnabled = Boolean(env.N8N_BASE_URL);
 const client = n8nEnabled
   ? axios.create({
       baseURL: env.N8N_BASE_URL,
-      timeout: 5000,
+      timeout: 30000, // 30 секунд
       headers: { Authorization: `Bearer ${env.N8N_API_KEY}` },
     })
   : null;
