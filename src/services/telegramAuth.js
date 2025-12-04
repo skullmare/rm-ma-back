@@ -21,87 +21,96 @@ const buildDebugPayload = (base, extra = {}) =>
 // ----------------------------
 
 export const verifyTelegramAuth = (initData, botToken = env.BOT_TOKEN) => {
-    if (!initData) {
-      throw new TelegramAuthError('initData is required');
-    }
-  
-    const params = new URLSearchParams(initData);
-    const allEntries = Array.from(params.entries());
-  
-    // Важно: удаляем ВСЕ возможные подписи ДО сортировки!
-    const receivedHash = params.get('hash') || params.get('signature');
-  
-    if (!receivedHash) {
-      throw new TelegramAuthError('No hash/signature found');
-    }
-  
-    // УДАЛЯЕМ hash И signature — они НЕ должны быть в data-check-string
-    params.delete('hash');
-    params.delete('signature');
-  
-    // Теперь собираем правильную строку
-    const dataCheckString = Array.from(params.entries())
+  if (!initData) {
+    throw new TelegramAuthError('initData is required');
+  }
+
+  const params = new URLSearchParams(initData);
+  // Требуем именно поле `hash`. Нельзя доверять `signature` как признак теста!
+  const receivedHash = params.get('hash');
+
+  if (!receivedHash) {
+    // НИКАК нельзя принимать запросы без hash в production.
+    throw new TelegramAuthError('No hash found — hash field is required');
+  }
+
+  // Удаляем подписи из набора параметров, т.к. они не должны быть в data-check-string
+  params.delete('hash');
+  // Если есть поле signature — удаляем чтобы оно не попало в data-check-string,
+  // но не используем его как переключатель режима.
+  params.delete('signature');
+
+  // Собираем data-check-string (ключи в лексикографическом порядке)
+  const dataCheckString = Array.from(params.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
-  
-    // Определяем режим
-    const hasHashField = allEntries.some(([k]) => k === 'hash');
-    const isTestEnv = !hasHashField || initData.includes('signature=');
-  
-    let expectedHash;
-    if (isTestEnv) {
-      // В тестовом окружении (webk, desktop dev, signature) — Telegram НЕ требует проверки HMAC
-      expectedHash = receivedHash; // просто принимаем как есть
-    } else {
-      // Боевой режим — считаем HMAC-SHA256
-      const secretKey = crypto.createHash('sha256').update(botToken).digest();
-      expectedHash = crypto
-        .createHmac('sha256', secretKey)
-        .update(dataCheckString)
-        .digest('hex');
-    }
-  
-    if (receivedHash !== expectedHash) {
+
+  // Всегда вычисляем ожидаемый хеш используя бот-токен (production и dev)
+  const secretKey = crypto.createHash('sha256').update(botToken).digest();
+  const expectedHash = crypto
+    .createHmac('sha256', secretKey)
+    .update(dataCheckString)
+    .digest('hex');
+
+  // Защищённое сравнение: избегаем утечек через timing-attack.
+  try {
+    const receivedBuf = Buffer.from(receivedHash, 'hex');
+    const expectedBuf = Buffer.from(expectedHash, 'hex');
+
+    if (receivedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(receivedBuf, expectedBuf)) {
       throw new TelegramAuthError('Signature mismatch', buildDebugPayload({
         initData,
         dataCheckString,
         receivedHash,
         expectedHash,
-        isTestEnv,
-        botTokenLength: botToken.length,
+        botTokenLength: botToken ? botToken.length : 0,
       }));
     }
-  
-    // Проверка срока действия
-    const authDate = Number(params.get('auth_date'));
-    if (!authDate || Date.now() / 1000 - authDate > env.TELEGRAM_AUTH_TTL) {
-      throw new TelegramAuthError('Auth data expired');
-    }
-  
-    // Парсим user
-    const userStr = params.get('user');
-    if (!userStr) throw new TelegramAuthError('user field missing');
-  
-    let user;
-    try {
-      user = JSON.parse(userStr);
-    } catch {
-      throw new TelegramAuthError('Invalid user JSON');
-    }
-  
-    return {
-      telegramUser: {
-        id: Number(user.id),
-        firstName: user.first_name || '',
-        lastName: user.last_name || '',
-        username: user.username || '',
-        isPremium: !!user.is_premium,
-        languageCode: user.language_code || 'en',
-        photoUrl: user.photo_url || '',
-        allowsWriteToPm: !!user.allows_write_to_pm,
-      },
-      authDate: authDate * 1000,
-      queryId: params.get('query_id') || undefined,
-    };
+  } catch (err) {
+    // Если Buffer.from(...) выбросил ошибку (не hex) — тоже считаем это несовпадением подписи
+    if (err instanceof TelegramAuthError) throw err;
+    throw new TelegramAuthError('Signature mismatch (invalid hash format)', buildDebugPayload({
+      initData,
+      dataCheckString,
+      receivedHash,
+      expectedHash,
+      botTokenLength: botToken ? botToken.length : 0,
+      error: err.message,
+    }));
+  }
+
+  // Проверка срока действия
+  const authDateStr = params.get('auth_date');
+  const authDate = authDateStr ? Number(authDateStr) : NaN;
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!authDate || Number.isNaN(authDate) || nowSec - authDate > env.TELEGRAM_AUTH_TTL) {
+    throw new TelegramAuthError('Auth data expired');
+  }
+
+  // Парсим user
+  const userStr = params.get('user');
+  if (!userStr) throw new TelegramAuthError('user field missing');
+
+  let user;
+  try {
+    user = JSON.parse(userStr);
+  } catch {
+    throw new TelegramAuthError('Invalid user JSON');
+  }
+
+  return {
+    telegramUser: {
+      id: Number(user.id),
+      firstName: user.first_name || '',
+      lastName: user.last_name || '',
+      username: user.username || '',
+      isPremium: !!user.is_premium,
+      languageCode: user.language_code || 'en',
+      photoUrl: user.photo_url || '',
+      allowsWriteToPm: !!user.allows_write_to_pm,
+    },
+    authDate: authDate * 1000,
+    queryId: params.get('query_id') || undefined,
   };
+};

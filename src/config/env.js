@@ -12,11 +12,11 @@ const parseNumber = (value, fallback) => {
 
 export const env = Object.freeze({
   PORT: parseNumber(process.env.PORT, 4000),
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN ?? '',
-  BOT_TOKEN: process.env.BOT_TOKEN ?? '',
-  JWT_SECRET: process.env.JWT_SECRET ?? '',
-  N8N_BASE_URL: process.env.N8N_BASE_URL ?? '',
-  N8N_API_KEY: process.env.N8N_API_KEY ?? '',
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
+  BOT_TOKEN: process.env.BOT_TOKEN,
+  JWT_SECRET: process.env.JWT_SECRET,
+  N8N_BASE_URL: process.env.N8N_BASE_URL,
+  N8N_API_KEY: process.env.N8N_API_KEY,
   TELEGRAM_AUTH_TTL: parseNumber(process.env.TELEGRAM_AUTH_TTL, 86400),
   ENABLE_DEBUG_ERRORS: parseBoolean(process.env.ENABLE_DEBUG_ERRORS, true),
 });
