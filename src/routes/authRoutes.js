@@ -8,7 +8,7 @@ const router = Router();
 
 router.post('/login', async (req, res, next) => {
   try {
-    const { initData } = req.body ?? {};
+    const initData = req.body.initData;
 
     if (!initData) {
       return res.status(400).json({ message: 'initData is required' });
