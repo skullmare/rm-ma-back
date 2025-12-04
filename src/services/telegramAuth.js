@@ -21,6 +21,7 @@ const buildDebugPayload = (base, extra = {}) =>
 // ----------------------------
 
 export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => {
+  console.log(initDataString);
   if (!initDataString) {
     throw new TelegramAuthError('initData is required');
   }
