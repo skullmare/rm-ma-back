@@ -36,7 +36,7 @@ router.post("/create-payment", authGuard, async (req, res, next) => {
             payment_method_data: {
                 type: "bank_card"
             },
-            metadata: { chat_id },
+            metadata: { chat_id: chat_id },
         });
 
         return res.json(payment);
