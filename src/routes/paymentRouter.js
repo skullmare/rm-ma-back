@@ -13,9 +13,13 @@ const yookassa = new YooKassa({
 // -----------------------------------------------------------
 // 1. Создание первого платежа с сохранением карты
 // -----------------------------------------------------------
-router.post("/create-payment", authGuard, async (req, res) => {
+router.post("/create-payment", authGuard, async (req, res, next) => {
     try {
-        const chat_id = req.user.id;
+        const chat_id = req.user.telegramId || req.user.id;
+
+        if (!chat_id) {
+            return res.status(400).json({ message: 'User chat_id not found' });
+        }
 
         const payment = await yookassa.createPayment({
             amount: {
@@ -38,7 +42,7 @@ router.post("/create-payment", authGuard, async (req, res) => {
         return res.json(payment);
     } catch (error) {
         console.error("Ошибка создания платежа:", error);
-        return res.status(500).json({ error: error.message });
+        return next(error);
     }
 });
 
