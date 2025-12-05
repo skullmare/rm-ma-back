@@ -1,27 +1,41 @@
-import { verifyToken } from '../services/tokenService.js';
-import { findUserById } from '../repositories/userRepository.js';
+import { verifyTelegramAuth, TelegramAuthError } from '../services/telegramAuth.js';
+
+const INIT_DATA_HEADER = 'x-telegram-init-data';
+
+const normalizeTelegramUser = (telegramUser) => ({
+  ...telegramUser,
+  telegramId: telegramUser.id,
+  chatId: String(telegramUser.id),
+});
 
 export const authGuard = (req, res, next) => {
-  const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.substring(7) : null;
+  const initData =
+    req.get(INIT_DATA_HEADER) ||
+    req.body?.initData ||
+    req.query?.initData;
 
-  if (!token) {
-    return res.status(401).json({ message: 'Authorization token is required' });
+  if (!initData) {
+    return res
+      .status(401)
+      .json({ message: 'Telegram initData header is required' });
   }
 
   try {
-    const payload = verifyToken(token);
-    const user = findUserById(payload.userId);
+    const { telegramUser, authDate, queryId } = verifyTelegramAuth(initData);
+    const user = normalizeTelegramUser(telegramUser);
 
-    if (!user) {
-      return res.status(401).json({ message: 'User session not found' });
+    req.auth = { telegramUser, authDate, queryId };
+    req.user = user;
+    req.chatId = user.chatId;
+
+    return next();
+  } catch (error) {
+    if (error instanceof TelegramAuthError) {
+      return res.status(error.status).json({ message: error.message });
     }
 
-    req.auth = payload;
-    req.user = user;
-    return next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    console.error('AuthGuard error:', error);
+    return res.status(500).json({ message: 'Failed to authorize request' });
   }
 };
 

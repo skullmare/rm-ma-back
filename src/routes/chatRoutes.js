@@ -5,9 +5,16 @@ import { sendAgentMessage, getAgentMessages } from '../services/n8nClient.js';
 const router = Router();
 
 // Получение истории сообщений
+const resolveChatId = (req) =>
+  req.chatId ||
+  req.user?.chatId ||
+  req.user?.telegramId ||
+  req.user?.id ||
+  req.auth?.telegramUser?.id;
+
 router.get('/history', authGuard, async (req, res, next) => {
   try {
-    const chatId = req.user.telegramId || req.user.id;
+    const chatId = resolveChatId(req);
     
     if (!chatId) {
       return res.status(400).json({ message: 'User chat_id not found' });
@@ -32,7 +39,7 @@ router.get('/history', authGuard, async (req, res, next) => {
 router.post('/send', authGuard, async (req, res, next) => {
   try {
     const { message, agent } = req.body ?? {};
-    const chatId = req.user.telegramId || req.user.id;
+    const chatId = resolveChatId(req);
 
     if (!message || !agent) {
       return res
@@ -61,5 +68,4 @@ router.post('/send', authGuard, async (req, res, next) => {
 });
 
 export default router;
-
 

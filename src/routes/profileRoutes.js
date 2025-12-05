@@ -4,9 +4,16 @@ import { getProfile, updateProfession } from '../services/n8nClient.js';
 
 const router = Router();
 
+const resolveChatId = (req) =>
+  req.chatId ||
+  req.user?.chatId ||
+  req.user?.telegramId ||
+  req.user?.id ||
+  req.auth?.telegramUser?.id;
+
 router.get('/', authGuard, async (req, res, next) => {
   try {
-    const chatId = req.user.telegramId || req.user.id;
+    const chatId = resolveChatId(req);
     
     if (!chatId) {
       console.error('Profile route: chat_id not found in req.user:', req.user);
@@ -18,7 +25,7 @@ router.get('/', authGuard, async (req, res, next) => {
     // Если n8n вернул ошибку или пропустил запрос, возвращаем базовый профиль
     if (n8nProfile && (n8nProfile.status === 'error' || n8nProfile.status === 'skipped')) {
       const fallbackProfile = {
-        userId: req.user.id,
+        userId: req.user?.id || Number(chatId),
         chat_id: String(chatId),
         tariff: 'free',
         tokensRemaining: 0,
@@ -63,7 +70,6 @@ router.put('/profession', authGuard, async (req, res, next) => {
 });
 
 export default router;
-
 
 
 
