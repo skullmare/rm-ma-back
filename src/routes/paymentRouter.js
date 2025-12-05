@@ -1,5 +1,6 @@
 import express from "express";
 import YooKassa from "yookassa";
+import { authGuard } from "../middleware/authGuard.js";
 
 const router = express.Router();
 
@@ -12,9 +13,18 @@ const yookassa = new YooKassa({
 // -----------------------------------------------------------
 // 1. Создание первого платежа с сохранением карты
 // -----------------------------------------------------------
-router.post("/create-payment", async (req, res) => {
+router.post("/create-payment", authGuard, async (req, res) => {
     try {
-        const { chat_id } = req.body;
+        const chatId =
+            req.chatId ||
+            req.user?.chatId ||
+            req.user?.telegramId ||
+            req.user?.id ||
+            req.auth?.telegramUser?.id;
+
+        if (!chatId) {
+            return res.status(400).json({ error: "User chat_id not found" });
+        }
 
         const payment = await yookassa.createPayment({
             amount: {
@@ -29,9 +39,9 @@ router.post("/create-payment", async (req, res) => {
             description: "Оплата подписки Rocketmind",
             save_payment_method: true, // <--- обязательно для автосписания!
             payment_method_data: {
-                type: "bank_card"
+                type: "bank_card",
             },
-            metadata: { chat_id },
+            metadata: { chat_id: String(chatId) },
         });
 
         return res.json(payment);

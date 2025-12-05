@@ -46,13 +46,14 @@ router.get('/', authGuard, async (req, res, next) => {
 
 router.put('/profession', authGuard, async (req, res, next) => {
   try {
-    const { chat_id, profession } = req.body;
+    const { profession } = req.body || {};
+    const chatId = resolveChatId(req);
 
-    if (!chat_id) {
-      return res.status(400).json({ message: 'chat_id is required' });
+    if (!chatId) {
+      return res.status(400).json({ message: 'User chat_id not found' });
     }
 
-    const result = await updateProfession(chat_id, profession);
+    const result = await updateProfession(chatId, profession);
 
     // Если n8n вернул ошибку или пропустил запрос
     if (result && (result.status === 'error' || result.status === 'skipped')) {
@@ -70,6 +71,5 @@ router.put('/profession', authGuard, async (req, res, next) => {
 });
 
 export default router;
-
 
 
