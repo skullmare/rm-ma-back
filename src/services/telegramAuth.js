@@ -21,7 +21,6 @@ const buildDebugPayload = (base, extra = {}) =>
 // ----------------------------
 
 export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => {
-  console.log(initDataString);
   if (!initDataString) {
     throw new TelegramAuthError('initData is required');
   }
@@ -29,6 +28,7 @@ export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => 
   let initData;
   try {
     initData = parse(initDataString);
+    console.log(initData);
   } catch (err) {
     throw new TelegramAuthError(
       'Invalid initData format',
