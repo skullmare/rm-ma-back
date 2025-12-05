@@ -1,6 +1,5 @@
 import express from "express";
 import YooKassa from "yookassa";
-import { authGuard } from '../middleware/authGuard.js';
 
 const router = express.Router();
 
@@ -13,13 +12,9 @@ const yookassa = new YooKassa({
 // -----------------------------------------------------------
 // 1. Создание первого платежа с сохранением карты
 // -----------------------------------------------------------
-router.post("/create-payment", authGuard, async (req, res, next) => {
+router.post("/create-payment", async (req, res) => {
     try {
-        const chat_id = req.user.telegramId || req.user.id;
-
-        if (!chat_id) {
-            return res.status(400).json({ message: 'User chat_id not found' });
-        }
+        const { chat_id } = req.body;
 
         const payment = await yookassa.createPayment({
             amount: {
@@ -36,13 +31,13 @@ router.post("/create-payment", authGuard, async (req, res, next) => {
             payment_method_data: {
                 type: "bank_card"
             },
-            metadata: { chat_id: chat_id },
+            metadata: { chat_id },
         });
 
         return res.json(payment);
     } catch (error) {
         console.error("Ошибка создания платежа:", error);
-        return next(error);
+        return res.status(500).json({ error: error.message });
     }
 });
 
