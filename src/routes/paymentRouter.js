@@ -15,7 +15,7 @@ const yookassa = new YooKassa({
 // -----------------------------------------------------------
 router.post("/create-payment", authGuard, async (req, res) => {
     try {
-        const { chat_id } = req.user.id;
+        const chat_id = req.user.id;
 
         const payment = await yookassa.createPayment({
             amount: {
