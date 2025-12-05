@@ -44,8 +44,13 @@ router.post("/create-payment", async (req, res) => {
 // -----------------------------------------------------------
 // 2. Ежемесячное списание (вызывается из n8n)
 // -----------------------------------------------------------
-router.post("/charge", async (req, res) => {
+const AUTH_KEY = process.env.CHARGE_AUTH_KEY
+router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R4V657G0c78H3Vvu8pEIToFZKaboEnddTpzvKdJ3oea95D3v5n8cMQNZQfLZWVqxkWnF9lBKPVwc4G1egY78Oln", async (req, res) => {
     try {
+        const authHeader = req.headers["authorization"];
+        if (!authHeader || authHeader !== `Bearer ${AUTH_KEY}`) {
+            return res.status(403).json({ error: "Нет доступа" });
+        }
         const { chat_id, payment_method_id } = req.body;
 
         if (!chat_id || !payment_method_id) {
