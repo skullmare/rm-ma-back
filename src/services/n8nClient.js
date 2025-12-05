@@ -199,17 +199,12 @@ export const unsubscribeFromPremium = async (chatId) => {
     return { status: 'error', error: 'chatId is required' };
   }
 
-  const payload = [
-    {
-      chat_id: String(chatId),
-    },
-  ];
+  const payload = {
+    chat_id: String(chatId),
+  };
 
   try {
     const { data } = await client.post('/unsubscribe', payload);
-    if (Array.isArray(data) && data.length > 0) {
-      return data[0];
-    }
     return data ?? { status: 'ok' };
   } catch (error) {
     console.error('Failed to unsubscribe via n8n:', error.message);
