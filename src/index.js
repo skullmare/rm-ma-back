@@ -39,7 +39,6 @@ app.use((err, _req, res, _next) => {
   if (err instanceof TelegramAuthError) {
     return res.status(err.status).json({
       message: err.message,
-      ...(env.ENABLE_DEBUG_ERRORS && err.debug ? { debug: err.debug } : {}),
     });
   }
 
@@ -47,7 +46,6 @@ app.use((err, _req, res, _next) => {
   console.error(err);
   return res.status(status).json({
     message: err.message ?? 'Server error',
-    ...(env.ENABLE_DEBUG_ERRORS ? { debug: err.stack } : {}),
   });
 });
 

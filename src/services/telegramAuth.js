@@ -41,12 +41,6 @@ export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => 
     );
   }
 
-  // Проверка срока действия (библиотека не ограничивает TTL)
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (!initData.auth_date || nowSec - initData.auth_date > env.TELEGRAM_AUTH_TTL) {
-    throw new TelegramAuthError('Auth data expired');
-  }
-
   if (!initData.user) {
     throw new TelegramAuthError('User field missing');
   }
