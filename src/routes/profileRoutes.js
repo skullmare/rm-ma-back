@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/', authGuard, async (req, res, next) => {
   try {
-    const chatId = req.body.chat_id;;
+    const chatId = req.user.telegramId || req.user.id;
     
     if (!chatId) {
       console.error('Profile route: chat_id not found in req.user:', req.user);

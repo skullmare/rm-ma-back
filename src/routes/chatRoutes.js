@@ -7,7 +7,7 @@ const router = Router();
 // Получение истории сообщений
 router.get('/history', authGuard, async (req, res, next) => {
   try {
-    const chatId = req.body.chat_id;
+    const chatId = req.user.telegramId || req.user.id;
     
     if (!chatId) {
       return res.status(400).json({ message: 'User chat_id not found' });
@@ -31,8 +31,8 @@ router.get('/history', authGuard, async (req, res, next) => {
 // Отправка сообщения агенту
 router.post('/send', authGuard, async (req, res, next) => {
   try {
-    const { message, agent } = req.body;
-    const chatId = req.body.chat_id;;
+    const { message, agent } = req.body ?? {};
+    const chatId = req.user.telegramId || req.user.id;
 
     if (!message || !agent) {
       return res
