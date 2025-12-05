@@ -23,7 +23,7 @@ router.post("/create-payment", async (req, res) => {
             },
             confirmation: {
                 type: "redirect",
-                return_url: String(process.env.YOOKASSA_RETURN_URL),
+                return_url: "https://t.me/miniapp_rocketmind_bot/miniapp",
             },
             capture: true,
             description: "Оплата подписки Rocketmind",
