@@ -37,7 +37,7 @@ export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => 
   }
 
   try {
-    validate(initData, botToken);
+    validate(initDataString, botToken);
   } catch (err) {
     throw new TelegramAuthError(
       'Signature mismatch',
