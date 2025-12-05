@@ -1,5 +1,6 @@
 import express from "express";
 import YooKassa from "yookassa";
+import { authGuard } from '../middleware/authGuard.js';
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ const yookassa = new YooKassa({
 // -----------------------------------------------------------
 // 1. Создание первого платежа с сохранением карты
 // -----------------------------------------------------------
-router.post("/create-payment", async (req, res) => {
+router.post("/create-payment", authGuard, async (req, res) => {
     try {
         const { chat_id } = req.body;
 
@@ -23,7 +24,7 @@ router.post("/create-payment", async (req, res) => {
             },
             confirmation: {
                 type: "redirect",
-                return_url: "https://t.me/miniapp_rocketmind_bot/miniapp",
+                return_url: process.env.YOOKASSA_RETURN_URL,
             },
             capture: true,
             description: "Оплата подписки Rocketmind",
@@ -45,7 +46,7 @@ router.post("/create-payment", async (req, res) => {
 // 2. Ежемесячное списание (вызывается из n8n)
 // -----------------------------------------------------------
 const AUTH_KEY = process.env.CHARGE_AUTH_KEY
-router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R4V657G0c78H3Vvu8pEIToFZKaboEnddTpzvKdJ3oea95D3v5n8cMQNZQfLZWVqxkWnF9lBKPVwc4G1egY78Oln", async (req, res) => {
+router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R", async (req, res) => {
     try {
         const authHeader = req.headers["authorization"];
         if (!authHeader || authHeader !== `Bearer ${AUTH_KEY}`) {
