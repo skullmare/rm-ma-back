@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { verifyTelegramAuth } from '../services/telegramAuth.js';
 import { issueToken } from '../services/tokenService.js';
-import { syncTelegramUser } from '../repositories/userRepository.js';
 import { initProfile } from '../services/n8nClient.js';
 
 const router = Router();
@@ -15,23 +14,22 @@ router.post('/login', async (req, res, next) => {
     }
 
     const { telegramUser } = verifyTelegramAuth(initData);
-    const user = syncTelegramUser(telegramUser);
     // Инициализируем профиль в n8n (не блокируем авторизацию при ошибке)
     initProfile(user).catch((error) => {
       console.error('Profile initialization error:', error);
     });
 
     const token = issueToken({
-      userId: user.id,
-      telegramId: user.telegramId,
+      userId: telegramUser.id,
+      telegramId: telegramUser.id,
     });
 
     // Отправляем только token и chat_id, данные профиля будут приходить из n8n через /api/profile
     return res.json({ 
       token, 
       user: {
-        id: user.id,
-        chat_id: String(user.telegramId || user.id),
+        id: telegramUser.id,
+        chat_id: String(telegramUser.id),
       }
     });
   } catch (error) {
