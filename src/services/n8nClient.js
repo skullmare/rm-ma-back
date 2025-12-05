@@ -190,3 +190,33 @@ export const getAgentMessages = async (chatId, timestamp = null) => {
   }
 };
 
+export const unsubscribeFromPremium = async (chatId) => {
+  if (!client) {
+    return { status: 'skipped', reason: 'n8n client not configured' };
+  }
+
+  if (!chatId) {
+    return { status: 'error', error: 'chatId is required' };
+  }
+
+  const payload = [
+    {
+      chat_id: String(chatId),
+    },
+  ];
+
+  try {
+    const { data } = await client.post('/unsubscribe', payload);
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0];
+    }
+    return data ?? { status: 'ok' };
+  } catch (error) {
+    console.error('Failed to unsubscribe via n8n:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    return { status: 'error', error: error.message };
+  }
+};

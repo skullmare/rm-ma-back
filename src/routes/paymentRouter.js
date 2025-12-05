@@ -1,6 +1,7 @@
 import express from "express";
 import YooKassa from "yookassa";
 import { authGuard } from "../middleware/authGuard.js";
+import { unsubscribeFromPremium } from "../services/n8nClient.js";
 
 const router = express.Router();
 
@@ -10,17 +11,19 @@ const yookassa = new YooKassa({
     secretKey: process.env.YOOKASSA_SECRET_KEY,
 });
 
+const resolveChatId = (req) =>
+    req.chatId ||
+    req.user?.chatId ||
+    req.user?.telegramId ||
+    req.user?.id ||
+    req.auth?.telegramUser?.id;
+
 // -----------------------------------------------------------
 // 1. Создание первого платежа с сохранением карты
 // -----------------------------------------------------------
 router.post("/create-payment", authGuard, async (req, res) => {
     try {
-        const chatId =
-            req.chatId ||
-            req.user?.chatId ||
-            req.user?.telegramId ||
-            req.user?.id ||
-            req.auth?.telegramUser?.id;
+        const chatId = resolveChatId(req);
 
         if (!chatId) {
             return res.status(400).json({ error: "User chat_id not found" });
@@ -84,6 +87,29 @@ router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R", async (req, res) => 
     } catch (error) {
         console.error("Ошибка автосписания:", error);
         return res.status(500).json({ error: error.message });
+    }
+});
+
+router.post("/unsubscribe", authGuard, async (req, res) => {
+    try {
+        const chatId = resolveChatId(req);
+
+        if (!chatId) {
+            return res.status(400).json({ error: "User chat_id not found" });
+        }
+
+        const result = await unsubscribeFromPremium(chatId);
+
+        if (result?.status === "error") {
+            return res.status(500).json({
+                error: result.error || "Failed to cancel subscription",
+            });
+        }
+
+        return res.json({ success: true, data: result });
+    } catch (error) {
+        console.error("Ошибка отмены подписки:", error);
+        return res.status(500).json({ error: "Failed to unsubscribe" });
     }
 });
 
