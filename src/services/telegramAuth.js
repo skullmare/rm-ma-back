@@ -13,26 +13,23 @@ export class TelegramAuthError extends Error {
   }
 }
 
-const buildDebugPayload = (base, extra = {}) =>
-  env.ENABLE_DEBUG_ERRORS ? { ...base, ...extra } : null;
-
 // ----------------------------
 // Main validation function
 // ----------------------------
 
 export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => {
   if (!initDataString) {
-    throw new TelegramAuthError('initData is required');
+    throw new TelegramAuthError(
+      'initData is required'
+    );
   }
 
   let initData;
   try {
     initData = parse(initDataString);
-    console.log(initData);
   } catch (err) {
     throw new TelegramAuthError(
-      'Invalid initData format',
-      buildDebugPayload({ initDataString, error: err.message })
+      'Invalid initData format'
     );
   }
 
@@ -40,11 +37,7 @@ export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => 
     validate(initDataString, botToken);
   } catch (err) {
     throw new TelegramAuthError(
-      'Signature mismatch',
-      buildDebugPayload({
-        initDataString,
-        error: err.message,
-      })
+      'Signature mismatch'
     );
   }
 
@@ -55,7 +48,7 @@ export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => 
   }
 
   if (!initData.user) {
-    throw new TelegramAuthError('user field missing');
+    throw new TelegramAuthError('User field missing');
   }
 
   const user = initData.user;
