@@ -23,7 +23,7 @@ router.post("/create-payment", async (req, res) => {
             },
             confirmation: {
                 type: "redirect",
-                return_url: process.env.YOOKASSA_RETURN_URL,
+                return_url: String(process.env.YOOKASSA_RETURN_URL),
             },
             capture: true,
             description: "Оплата подписки Rocketmind",
