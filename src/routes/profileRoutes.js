@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authGuard } from '../middleware/authGuard.js';
-import { getProfile, updateProfession } from '../services/n8nClient.js';
+import { getProfile, updateProfession, updateRole } from '../services/n8nClient.js';
 
 const router = Router();
 
@@ -70,6 +70,29 @@ router.put('/profession', authGuard, async (req, res, next) => {
   }
 });
 
+router.put('/role', authGuard, async (req, res, next) => {
+  try {
+    const { role } = req.body || {};
+    const chatId = resolveChatId(req);
+
+    if (!chatId) {
+      return res.status(400).json({ message: 'User chat_id not found' });
+    }
+
+    const result = await updateRole(chatId, role);
+
+    if (result && (result.status === 'error' || result.status === 'skipped')) {
+      return res.status(500).json({
+        message: result.error || result.reason || 'Failed to update role',
+      });
+    }
+
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error in role update route:', error);
+    console.error('Error stack:', error.stack);
+    return next(error);
+  }
+});
+
 export default router;
-
-

@@ -114,6 +114,34 @@ export const updateProfession = async (chatId, profession) => {
   }
 };
 
+export const updateRole = async (chatId, role) => {
+  if (!client) {
+    return { status: 'skipped', reason: 'n8n client not configured' };
+  }
+
+  if (!chatId) {
+    return { status: 'error', error: 'chatId is required' };
+  }
+
+  const payload = {
+    role: role || '',
+  };
+
+  try {
+    const { data } = await client.post('/profile/roles/update', payload, {
+      params: { chat_id: String(chatId) },
+    });
+    return data;
+  } catch (error) {
+    console.error('Failed to update role in n8n:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    return { status: 'error', error: error.message };
+  }
+};
+
 export const sendAgentMessage = async (chatId, message, agent) => {
   if (!client) {
     return { status: 'skipped', reason: 'n8n client not configured' };
