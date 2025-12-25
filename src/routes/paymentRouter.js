@@ -91,8 +91,9 @@ router.post("/create-payment", authGuard, async (req, res) => {
 // 2. Автосписание (вызывается из n8n)
 // -----------------------------------------------------------
 const AUTH_KEY = process.env.CHARGE_AUTH_KEY;
+const CHARGE_URL = process.env.CHARGE_URL;
 
-router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R", async (req, res) => {
+router.post(`/${CHARGE_URL}`, async (req, res) => {
     try {
         const authHeader = req.headers["authorization"];
 
