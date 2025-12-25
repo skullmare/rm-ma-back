@@ -5,6 +5,8 @@ import { unsubscribeFromPremium } from "../services/n8nClient.js";
 
 const router = express.Router();
 
+const AMOUNT = "11.00";
+
 // -----------------------------------------------------------
 // Инициализация YooKassa SDK
 // -----------------------------------------------------------
@@ -35,7 +37,7 @@ const buildReceipt = (description) => ({
             description,
             quantity: "1.00",
             amount: {
-                value: "1000.00",
+                value: AMOUNT,
                 currency: "RUB",
             },
             vat_code: 1, // НДС не облагается (SaaS / услуги)
@@ -59,7 +61,7 @@ router.post("/create-payment", authGuard, async (req, res) => {
 
         const payment = await yookassa.createPayment({
             amount: {
-                value: "1000.00",
+                value: AMOUNT,
                 currency: "RUB",
             },
             confirmation: {
@@ -108,7 +110,7 @@ router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R", async (req, res) => 
 
         const payment = await yookassa.createPayment({
             amount: {
-                value: "1000.00",
+                value: AMOUNT,
                 currency: "RUB",
             },
             payment_method_id, // автосписание
