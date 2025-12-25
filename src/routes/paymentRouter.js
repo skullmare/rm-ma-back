@@ -5,12 +5,17 @@ import { unsubscribeFromPremium } from "../services/n8nClient.js";
 
 const router = express.Router();
 
-// Инициализация ЮKassa SDK
+// -----------------------------------------------------------
+// Инициализация YooKassa SDK
+// -----------------------------------------------------------
 const yookassa = new YooKassa({
     shopId: process.env.YOOKASSA_SHOP_ID,
     secretKey: process.env.YOOKASSA_SECRET_KEY,
 });
 
+// -----------------------------------------------------------
+// Утилита для определения chat_id
+// -----------------------------------------------------------
 const resolveChatId = (req) =>
     req.chatId ||
     req.user?.chatId ||
@@ -19,7 +24,30 @@ const resolveChatId = (req) =>
     req.auth?.telegramUser?.id;
 
 // -----------------------------------------------------------
-// 1. Создание первого платежа с сохранением карты
+// Общий receipt (54-ФЗ)
+// -----------------------------------------------------------
+const buildReceipt = (description) => ({
+    customer: {
+        email: "ai@rocketmind.ru", // обязательный email для ЮKassa
+    },
+    items: [
+        {
+            description,
+            quantity: "1.00",
+            amount: {
+                value: "1000.00",
+                currency: "RUB",
+            },
+            vat_code: 1, // НДС не облагается (SaaS / услуги)
+            payment_mode: "full_payment",
+            payment_subject: "service",
+        },
+    ],
+    tax_system_code: 1,
+});
+
+// -----------------------------------------------------------
+// 1. Первый платёж (сохранение карты)
 // -----------------------------------------------------------
 router.post("/create-payment", authGuard, async (req, res) => {
     try {
@@ -31,7 +59,7 @@ router.post("/create-payment", authGuard, async (req, res) => {
 
         const payment = await yookassa.createPayment({
             amount: {
-                value: "1000",
+                value: "1000.00",
                 currency: "RUB",
             },
             confirmation: {
@@ -40,11 +68,14 @@ router.post("/create-payment", authGuard, async (req, res) => {
             },
             capture: true,
             description: "Оплата подписки Rocketmind",
-            save_payment_method: true, // <--- обязательно для автосписания!
+            save_payment_method: true, // обязательно для автосписаний
             payment_method_data: {
                 type: "bank_card",
             },
-            metadata: { chat_id: String(chatId) },
+            receipt: buildReceipt("Подписка Rocketmind на 1 месяц"),
+            metadata: {
+                chat_id: String(chatId),
+            },
         });
 
         return res.json(payment);
@@ -55,32 +86,38 @@ router.post("/create-payment", authGuard, async (req, res) => {
 });
 
 // -----------------------------------------------------------
-// 2. Ежемесячное списание (вызывается из n8n)
+// 2. Автосписание (вызывается из n8n)
 // -----------------------------------------------------------
-const AUTH_KEY = process.env.CHARGE_AUTH_KEY
+const AUTH_KEY = process.env.CHARGE_AUTH_KEY;
+
 router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R", async (req, res) => {
     try {
         const authHeader = req.headers["authorization"];
+
         if (!authHeader || authHeader !== `Bearer ${AUTH_KEY}`) {
             return res.status(403).json({ error: "Нет доступа" });
         }
+
         const { chat_id, payment_method_id } = req.body;
 
         if (!chat_id || !payment_method_id) {
             return res.status(400).json({
-                error: "chat_id и payment_method_id обязательны"
+                error: "chat_id и payment_method_id обязательны",
             });
         }
 
         const payment = await yookassa.createPayment({
             amount: {
-                value: "1000",
+                value: "1000.00",
                 currency: "RUB",
             },
-            payment_method_id: payment_method_id, // <--- автосписание
+            payment_method_id, // автосписание
             capture: true,
-            description: "Месячное списание — продление подписки",
-            metadata: { chat_id },
+            description: "Продление подписки Rocketmind",
+            receipt: buildReceipt("Продление подписки Rocketmind на 1 месяц"),
+            metadata: {
+                chat_id,
+            },
         });
 
         return res.json(payment);
@@ -90,6 +127,9 @@ router.post("/uYeeKVVtVHF8bibriRywhvyKko4yl1LirJ7nXivys8R", async (req, res) => 
     }
 });
 
+// -----------------------------------------------------------
+// 3. Отмена подписки
+// -----------------------------------------------------------
 router.post("/unsubscribe", authGuard, async (req, res) => {
     try {
         const chatId = resolveChatId(req);
