@@ -13,12 +13,16 @@ const app = express();
 app.use(express.json());                     // для JSON тел
 app.use(express.urlencoded({ extended: true }));  // ЭТО РЕШЕНИЕ ТВОЕЙ ПРОБЛЕМЫ
 
-app.use(
-  cors({
-    origin: env.CLIENT_ORIGIN === '*' ? undefined : env.CLIENT_ORIGIN,
-    credentials: true,
-  })
-);
+const allowedOrigins = [
+  'https://rm-ma-front-rocketmind.amvera.io',
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true // если нужны куки
+}));
 
 app.use(express.json());
 
