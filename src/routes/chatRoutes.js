@@ -22,8 +22,9 @@ router.get('/history', authGuard, async (req, res, next) => {
 
     // Получаем timestamp из query параметра (опционально)
     const timestamp = req.query.timestamp || null;
+    const agent = req.query.agent;
 
-    const messages = await getAgentMessages(chatId, timestamp);
+    const messages = await getAgentMessages(chatId, timestamp, agent);
 
     // Возвращаем сообщения в формате, который ожидает фронтенд
     return res.json({

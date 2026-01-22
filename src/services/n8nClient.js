@@ -181,7 +181,7 @@ export const sendAgentMessage = async (chatId, message, agent) => {
   }
 };
 
-export const getAgentMessages = async (chatId, timestamp = null) => {
+export const getAgentMessages = async (chatId, timestamp = null, agent) => {
   if (!client) {
     return { status: 'skipped', reason: 'n8n client not configured' };
   }
@@ -192,6 +192,7 @@ export const getAgentMessages = async (chatId, timestamp = null) => {
 
   const payload = {
     chat_id: String(chatId),
+    agent: String(agent)
   };
 
   if (timestamp) {
