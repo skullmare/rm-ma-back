@@ -244,3 +244,30 @@ export const unsubscribeFromPremium = async (chatId) => {
     return { status: 'error', error: error.message };
   }
 };
+export const updateRegion = async (chatId, region) => {
+  if (!client) {
+    return { status: 'skipped', reason: 'n8n client not configured' };
+  }
+
+  if (!chatId) {
+    return { status: 'error', error: 'chatId is required' };
+  }
+
+  const payload = {
+    region: region || '',
+  };
+
+  try {
+    const { data } = await client.post('/profile/region/update', payload, {
+      params: { chat_id: String(chatId) },
+    });
+    return data;
+  } catch (error) {
+    console.error('Failed to update region in n8n:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    return { status: 'error', error: error.message };
+  }
+};
