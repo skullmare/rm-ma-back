@@ -5,7 +5,7 @@ import { unsubscribeFromPremium } from "../services/n8nClient.js";
 
 const router = express.Router();
 
-const AMOUNT = "11.00";
+const AMOUNT = process.env.AMOUNT;
 
 // -----------------------------------------------------------
 // Инициализация YooKassa SDK
