@@ -37,6 +37,7 @@ export const initProfile = async (user) => {
       last_name: user.lastName || '',
       username: username || '',
       photo_url: user.photoUrl || '',
+      start_param: user.start_param || '',
     },
   ];
 
