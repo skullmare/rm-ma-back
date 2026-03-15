@@ -60,5 +60,6 @@ export const verifyTelegramAuth = (initDataString, botToken = env.BOT_TOKEN) => 
     },
     authDate: initData.auth_date * 1000,
     queryId: initData.query_id || undefined,
+    start_param: initData.start_param || undefined,
   };
 };
